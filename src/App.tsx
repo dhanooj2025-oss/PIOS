@@ -4306,7 +4306,8 @@ return (
                       {(() => {
                         const segments = [];
                         const totalSegments = 16;
-                        const activeSegments = Math.round(0.88 * totalSegments); // 88%
+                        const scoreRatio = (metrics.financialHealthScore ?? 0) / 100;
+                        const activeSegments = Math.round(scoreRatio * totalSegments);
                         const stepAngle = Math.PI / (totalSegments - 1);
                         const cx = 120;
                         const cy = 115;
@@ -4357,8 +4358,8 @@ return (
                     
                     {/* Centered Score */}
                     <div style={{ position: 'absolute', bottom: '18px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1 }}>88%</div>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Healthy</span>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.1 }}>{metrics.financialHealthScore}%</div>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{metrics.financialHealthLabel}</span>
                     </div>
                   </div>
 
@@ -4367,10 +4368,10 @@ return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Overall Health</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>88%</span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{metrics.financialHealthScore}%</span>
                         {/* Short Progress Bar */}
                         <div style={{ width: '64px', height: '6px', backgroundColor: 'var(--border-medium)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ width: '88%', height: '100%', background: 'linear-gradient(90deg, #4F7CFF 0%, #93C5FD 100%)', borderRadius: '3px' }}></div>
+                          <div style={{ width: `${metrics.financialHealthScore}%`, height: '100%', background: 'linear-gradient(90deg, #4F7CFF 0%, #93C5FD 100%)', borderRadius: '3px' }}></div>
                         </div>
                       </div>
                     </div>

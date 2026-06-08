@@ -274,6 +274,8 @@ interface PricingStore {
     simCashRecoveryScore: number;
     simBenchmarkScore: number;
     simConfidenceScore: number;
+    financialHealthScore: number;
+    financialHealthLabel: string;
   };
 
   // Setters & Actions
@@ -1398,7 +1400,9 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
     simStabilityScore: 0,
     simCashRecoveryScore: 0,
     simBenchmarkScore: 0,
-    simConfidenceScore: 0
+    simConfidenceScore: 0,
+    financialHealthScore: 0,
+    financialHealthLabel: 'Critical'
   },
 
   setBaseCurrency: (currency) => {
@@ -2285,6 +2289,64 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
       simBenchmarkScore
     );
 
+    // ----------------------------------------------------
+    // FINANCIAL HEALTH SCORE CALCULATION
+    // ----------------------------------------------------
+    const profitVal = totalRecurringRevenueMonth - totalRecurringExpenseMonth;
+    let profitabilityScore = 0;
+    if (totalRecurringRevenueMonth > 0) {
+      const profitMargin = (profitVal / totalRecurringRevenueMonth) * 100;
+      // Scale linearly: -10% margin -> 0 points, 40% margin -> 100 points
+      profitabilityScore = Math.max(0, Math.min(100, ((profitMargin + 10) / 50) * 100));
+    } else {
+      profitabilityScore = totalRecurringExpenseMonth > 0 ? 0 : 20;
+    }
+
+    let liquidityScore = 0;
+    const totalOutflows = totalRecurringExpenseMonth + totalOutstandingPayables;
+    const totalInflows = totalRecurringRevenueMonth + totalOutstandingReceivables;
+    if (totalOutflows > 0) {
+      const currentLiquidity = totalInflows / totalOutflows;
+      // Scale linearly: 0.5 ratio -> 0 points, 2.0 ratio -> 100 points
+      liquidityScore = Math.max(0, Math.min(100, ((currentLiquidity - 0.5) / 1.5) * 100));
+    } else {
+      liquidityScore = 100;
+    }
+
+    let receivableHealth = 100;
+    if (totalOutstandingReceivables > 0) {
+      const receivableRatio = totalOutstandingReceivables / (totalRecurringRevenueMonth + totalOutstandingReceivables);
+      // Scale linearly: 10% ratio -> 100 points, 80% ratio -> 0 points
+      receivableHealth = Math.max(0, Math.min(100, (1 - (receivableRatio - 0.1) / 0.7) * 100));
+    }
+
+    let payableHealth = 100;
+    if (totalOutstandingPayables > 0) {
+      const payableRatio = totalOutstandingPayables / (totalRecurringExpenseMonth + totalOutstandingPayables);
+      // Scale linearly: 10% ratio -> 100 points, 80% ratio -> 0 points
+      payableHealth = Math.max(0, Math.min(100, (1 - (payableRatio - 0.1) / 0.7) * 100));
+    }
+
+    const financialHealthScore = Math.round(
+      profitabilityScore * 0.40 +
+      liquidityScore * 0.30 +
+      receivableHealth * 0.15 +
+      payableHealth * 0.15
+    );
+
+    let financialHealthLabel = 'Critical';
+    if (financialHealthScore >= 90) {
+      financialHealthLabel = 'Excellent';
+    } else if (financialHealthScore >= 75) {
+      financialHealthLabel = 'Healthy';
+    } else if (financialHealthScore >= 60) {
+      financialHealthLabel = 'Good';
+    } else if (financialHealthScore >= 40) {
+      financialHealthLabel = 'Warning';
+    } else {
+      financialHealthLabel = 'Critical';
+    }
+
     // Update state metrics
     set({
       metrics: {
@@ -2315,7 +2377,9 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
         simStabilityScore,
         simCashRecoveryScore,
         simBenchmarkScore,
-        simConfidenceScore
+        simConfidenceScore,
+        financialHealthScore,
+        financialHealthLabel
       }
     });
   },
