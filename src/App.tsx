@@ -2267,10 +2267,10 @@ function App() {
   
   const duplicateInvoice = async (inv: Invoice) => {
     const nextNum = invoices.length + 1;
-    const newId = `INV-2026-${nextNum.toString().padStart(3, '0')}`;
+    const tempId = `INV-2026-${nextNum.toString().padStart(3, '0')}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
     const dup: Invoice = {
       ...inv,
-      id: newId,
+      id: tempId,
       invoiceDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       payments: [],
@@ -2278,18 +2278,27 @@ function App() {
       status: 'Draft',
       receivableId: undefined
     };
+    
+    let finalDup = { ...dup };
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from('invoices').insert(mapInvoiceToDB(dup));
-      if (error) console.error('Error duplicating invoice in DB:', error);
+      const dbPayload = mapInvoiceToDB(dup);
+      delete dbPayload.id;
+      const { data, error } = await supabase.from('invoices').insert(dbPayload).select('id').single();
+      if (error) {
+        console.error('Error duplicating invoice in DB:', error);
+      } else if (data) {
+        finalDup.id = data.id;
+      }
     }
+    
     addAuditLog({
       entityType: 'Invoice',
-      entityId: dup.id,
+      entityId: finalDup.id,
       actionType: 'create',
-      changeSummary: `Duplicated invoice as draft '${dup.id}' (client: ${dup.clientName})`
+      changeSummary: `Duplicated invoice as draft '${finalDup.id}' (client: ${finalDup.clientName})`
     });
-    setInvoices(current => [...current, dup]);
-    alert(`Duplicated invoice as ${newId} (Draft)`);
+    setInvoices(current => [...current, finalDup]);
+    alert(`Duplicated invoice as ${finalDup.id} (Draft)`);
   };
 
   const deleteInvoice = async (inv: Invoice) => {
@@ -2468,7 +2477,7 @@ function App() {
     } else {
       // Create new
       const nextNum = invoices.length + 1;
-      const newId = `INV-2026-${nextNum.toString().padStart(3, '0')}`;
+      const tempId = `INV-2026-${nextNum.toString().padStart(3, '0')}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
       
       let finalStatus: Invoice['status'] = status;
       if (status === 'Sent' && invoiceForm.dueDate < todayStr) {
@@ -2476,7 +2485,7 @@ function App() {
       }
 
       const newInvoice: Invoice = {
-        id: newId,
+        id: tempId,
         clientName: invoiceForm.clientName,
         clientEmail: invoiceForm.clientEmail,
         companyName: invoiceForm.companyName,
@@ -2500,20 +2509,27 @@ function App() {
         projectName: invoiceForm.projectName
       };
 
+      let finalInvoice = { ...newInvoice };
       if (isSupabaseConfigured()) {
-        const { error } = await supabase.from('invoices').insert(mapInvoiceToDB(newInvoice));
-        if (error) console.error('Error creating invoice in DB:', error);
+        const dbPayload = mapInvoiceToDB(newInvoice);
+        delete dbPayload.id;
+        const { data, error } = await supabase.from('invoices').insert(dbPayload).select('id').single();
+        if (error) {
+          console.error('Error creating invoice in DB:', error);
+        } else if (data) {
+          finalInvoice.id = data.id;
+        }
       }
       addAuditLog({
         entityType: 'Invoice',
-        entityId: newInvoice.id,
+        entityId: finalInvoice.id,
         actionType: 'create',
-        changeSummary: `Created invoice '${newInvoice.id}' (client: ${newInvoice.clientName}, total: ${formatMoney(newInvoice.totalAmount, newInvoice.currency)})`
+        changeSummary: `Created invoice '${finalInvoice.id}' (client: ${finalInvoice.clientName}, total: ${formatMoney(finalInvoice.totalAmount, finalInvoice.currency)})`
       });
 
-      setInvoices(current => [...current, newInvoice]);
-      syncInvoiceToReceivables(newInvoice, 'create');
-      alert(`Invoice ${newId} created successfully.`);
+      setInvoices(current => [...current, finalInvoice]);
+      syncInvoiceToReceivables(finalInvoice, 'create');
+      alert(`Invoice ${finalInvoice.id} created successfully.`);
     }
     setInvoiceViewMode('list');
   };

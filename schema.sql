@@ -250,8 +250,10 @@ CREATE TABLE IF NOT EXISTS payables (
 );
 
 -- 17. Invoices Table
+CREATE SEQUENCE IF NOT EXISTS invoice_serial_seq START WITH 6;
+
 CREATE TABLE IF NOT EXISTS invoices (
-    id VARCHAR(50) PRIMARY KEY,
+    id VARCHAR(50) PRIMARY KEY DEFAULT ('INV-2026-' || lpad(nextval('invoice_serial_seq')::text, 5, '0')),
     user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     client_name VARCHAR(150) NOT NULL,
     client_email VARCHAR(150),
