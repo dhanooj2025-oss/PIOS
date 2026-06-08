@@ -1,11 +1,11 @@
 -- Supabase / PostgreSQL Database Schema for Pricing Intelligence Operating System (PIOS)
 -- Phase 1: Operational Pricing Engine
--- Optimized for a single-organization dashboard configuration
+-- Optimized for a secure multi-user architecture
 
 -- Enable UUID extension if not enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. Exchange Rates Table
+-- 1. Exchange Rates Table (Global reference data)
 CREATE TABLE IF NOT EXISTS currency_exchange_rates (
     from_currency VARCHAR(3) NOT NULL,
     to_currency VARCHAR(3) NOT NULL,
@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS currency_exchange_rates (
 -- 2. Employees (Workforce Economics)
 CREATE TABLE IF NOT EXISTS employees (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     role_name VARCHAR(100) NOT NULL,
     department VARCHAR(100) NOT NULL,
     annual_salary NUMERIC(15, 2) NOT NULL,
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS employees (
 -- 3. Infrastructure Services
 CREATE TABLE IF NOT EXISTS infrastructure_services (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     service_name VARCHAR(100) NOT NULL,
     category VARCHAR(50) NOT NULL,
     monthly_cost NUMERIC(12, 2) NOT NULL,
@@ -52,6 +54,7 @@ CREATE TABLE IF NOT EXISTS infrastructure_services (
 -- 4. SaaS Tools
 CREATE TABLE IF NOT EXISTS saas_tools (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     tool_name VARCHAR(100) NOT NULL,
     category VARCHAR(50) NOT NULL, -- AI, Productivity, Dev
     monthly_cost NUMERIC(12, 2) NOT NULL,
@@ -66,6 +69,7 @@ CREATE TABLE IF NOT EXISTS saas_tools (
 -- 5. Overhead Categories
 CREATE TABLE IF NOT EXISTS overhead_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     category_name VARCHAR(100) NOT NULL,
     monthly_cost NUMERIC(12, 2) NOT NULL,
     cost_currency VARCHAR(3) DEFAULT 'INR' NOT NULL,
@@ -77,6 +81,7 @@ CREATE TABLE IF NOT EXISTS overhead_categories (
 -- 6. Margin Policies
 CREATE TABLE IF NOT EXISTS pricing_policies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     policy_name VARCHAR(100) NOT NULL,
     minimum_safe_margin NUMERIC(5, 2) DEFAULT 25.0 NOT NULL,
     target_margin NUMERIC(5, 2) DEFAULT 35.0 NOT NULL,
@@ -88,7 +93,7 @@ CREATE TABLE IF NOT EXISTS pricing_policies (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 7. Regional Benchmarks
+-- 7. Regional Benchmarks (Global reference data)
 CREATE TABLE IF NOT EXISTS regional_benchmarks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     region_name VARCHAR(50) UNIQUE NOT NULL, -- US, UK, UAE, India
@@ -103,6 +108,7 @@ CREATE TABLE IF NOT EXISTS regional_benchmarks (
 -- 8. Project Estimates
 CREATE TABLE IF NOT EXISTS project_estimates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     project_name VARCHAR(150) NOT NULL,
     client_name VARCHAR(150) NOT NULL,
     client_region VARCHAR(50) NOT NULL,
@@ -123,6 +129,7 @@ CREATE TABLE IF NOT EXISTS project_estimates (
 -- 9. Project Resource Allocations
 CREATE TABLE IF NOT EXISTS project_resources (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     project_id UUID REFERENCES project_estimates(id) ON DELETE CASCADE,
     employee_id UUID REFERENCES employees(id) ON DELETE CASCADE,
     quantity NUMERIC(5, 2) DEFAULT 1.0 NOT NULL,
@@ -134,6 +141,7 @@ CREATE TABLE IF NOT EXISTS project_resources (
 -- 10. Milestone Structures
 CREATE TABLE IF NOT EXISTS milestone_structures (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     project_id UUID REFERENCES project_estimates(id) ON DELETE CASCADE,
     milestone_name VARCHAR(150) NOT NULL,
     percentage NUMERIC(5, 2) NOT NULL,
@@ -145,6 +153,7 @@ CREATE TABLE IF NOT EXISTS milestone_structures (
 -- 11. Audit Logs
 CREATE TABLE IF NOT EXISTS audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     entity_type VARCHAR(50) NOT NULL,
     entity_id UUID NOT NULL,
     action_type VARCHAR(20) NOT NULL, -- create, update, delete
@@ -155,6 +164,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 -- 12. Customers
 CREATE TABLE IF NOT EXISTS customers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     name VARCHAR(150) NOT NULL,
     company_name VARCHAR(150),
     customer_type VARCHAR(50) DEFAULT 'Other' NOT NULL,
@@ -184,6 +194,7 @@ CREATE TABLE IF NOT EXISTS customers (
 -- 13. Recurring Revenues
 CREATE TABLE IF NOT EXISTS recurring_revenues (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     client_name VARCHAR(150) NOT NULL,
     revenue_type VARCHAR(50) NOT NULL,
     amount NUMERIC(15, 2) NOT NULL,
@@ -199,6 +210,7 @@ CREATE TABLE IF NOT EXISTS recurring_revenues (
 -- 14. Recurring Expenses
 CREATE TABLE IF NOT EXISTS recurring_expenses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     expense_name VARCHAR(150) NOT NULL,
     category VARCHAR(50) NOT NULL,
     amount NUMERIC(15, 2) NOT NULL,
@@ -214,6 +226,7 @@ CREATE TABLE IF NOT EXISTS recurring_expenses (
 -- 15. Receivables
 CREATE TABLE IF NOT EXISTS receivables (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     client VARCHAR(150) NOT NULL,
     invoice VARCHAR(50) NOT NULL,
     amount NUMERIC(15, 2) NOT NULL,
@@ -226,6 +239,7 @@ CREATE TABLE IF NOT EXISTS receivables (
 -- 16. Payables
 CREATE TABLE IF NOT EXISTS payables (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     vendor VARCHAR(150) NOT NULL,
     expense VARCHAR(150) NOT NULL,
     amount NUMERIC(15, 2) NOT NULL,
@@ -238,6 +252,7 @@ CREATE TABLE IF NOT EXISTS payables (
 -- 17. Invoices Table
 CREATE TABLE IF NOT EXISTS invoices (
     id VARCHAR(50) PRIMARY KEY,
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     client_name VARCHAR(150) NOT NULL,
     client_email VARCHAR(150),
     company_name VARCHAR(150),
@@ -293,7 +308,7 @@ ON CONFLICT (region_name) DO UPDATE SET
     enterprise_rate = EXCLUDED.enterprise_rate,
     competitiveness_index = EXCLUDED.competitiveness_index;
 
--- Seed Employees
+-- Seed Employees (Defaults to user_id = NULL so they act as global fallback system records if RLS is bypassed or disabled)
 INSERT INTO employees (id, role_name, department, annual_salary, salary_currency, total_working_hours_month, utilization_percent, allocation_factor, overhead_multiplier, meetings_hours, operations_hours, leave_hours, internal_support_hours, learning_hours, active_status) VALUES
 ('e1111111-1111-1111-1111-111111111111', 'Senior Developer', 'Engineering', 1440000.00, 'INR', 176.00, 85.00, 1.00, 1.10, 15.00, 10.00, 8.00, 12.00, 10.00, TRUE),
 ('e2222222-2222-2222-2222-222222222222', 'Junior Developer', 'Engineering', 720000.00, 'INR', 176.00, 80.00, 1.00, 1.00, 15.00, 8.00, 8.00, 5.00, 15.00, TRUE),
@@ -388,21 +403,74 @@ INSERT INTO invoices (id, client_name, client_email, company_name, billing_addre
 ('INV-2026-005', 'Acme Corp', 'billing@acme.com', 'Acme Corporation', '123 Cloud Suite, Silicon Valley, CA', 'US98218201', 'INR', '2026-06-07', '2026-06-22', 'Net 15', '[{"id": "1", "qty": 1, "rate": 95000, "amount": 95000, "taxPercent": 0, "description": "Website Redesign Proposal and Wireframes"}]'::jsonb, 95000.00, 0.00, 0.00, 95000.00, 95000.00, 'Draft invoice. Not yet finalized.', 'Draft version to be reviewed by account manager', 'Wireframes review invoice draft.', 'Draft', '[]'::jsonb, NULL, 'Brand Redesign')
 ON CONFLICT (id) DO NOTHING;
 
--- Disable Row Level Security (RLS) on all tables for prototype configuration
-ALTER TABLE currency_exchange_rates DISABLE ROW LEVEL SECURITY;
-ALTER TABLE employees DISABLE ROW LEVEL SECURITY;
-ALTER TABLE infrastructure_services DISABLE ROW LEVEL SECURITY;
-ALTER TABLE saas_tools DISABLE ROW LEVEL SECURITY;
-ALTER TABLE overhead_categories DISABLE ROW LEVEL SECURITY;
-ALTER TABLE pricing_policies DISABLE ROW LEVEL SECURITY;
-ALTER TABLE regional_benchmarks DISABLE ROW LEVEL SECURITY;
-ALTER TABLE project_estimates DISABLE ROW LEVEL SECURITY;
-ALTER TABLE project_resources DISABLE ROW LEVEL SECURITY;
-ALTER TABLE milestone_structures DISABLE ROW LEVEL SECURITY;
-ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE customers DISABLE ROW LEVEL SECURITY;
-ALTER TABLE recurring_revenues DISABLE ROW LEVEL SECURITY;
-ALTER TABLE recurring_expenses DISABLE ROW LEVEL SECURITY;
-ALTER TABLE receivables DISABLE ROW LEVEL SECURITY;
-ALTER TABLE payables DISABLE ROW LEVEL SECURITY;
-ALTER TABLE invoices DISABLE ROW LEVEL SECURITY;
+-- Enable Row Level Security (RLS) on all tables for secure multi-user configuration
+ALTER TABLE currency_exchange_rates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE infrastructure_services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saas_tools ENABLE ROW LEVEL SECURITY;
+ALTER TABLE overhead_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pricing_policies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE regional_benchmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_estimates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_resources ENABLE ROW LEVEL SECURITY;
+ALTER TABLE milestone_structures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recurring_revenues ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recurring_expenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE receivables ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payables ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+
+-- 1. Create RLS Policies for Global Reference Tables
+CREATE POLICY "Allow read access for currency exchange rates" ON currency_exchange_rates
+    FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Allow read access for regional benchmarks" ON regional_benchmarks
+    FOR SELECT TO authenticated USING (true);
+
+-- 2. Create RLS Policies for Operational Tables (Tenant/User Isolation)
+CREATE POLICY "user_isolation_policy" ON employees
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON infrastructure_services
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON saas_tools
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON overhead_categories
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON pricing_policies
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON project_estimates
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON project_resources
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON milestone_structures
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON audit_logs
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON customers
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON recurring_revenues
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON recurring_expenses
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON receivables
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON payables
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_isolation_policy" ON invoices
+    FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
