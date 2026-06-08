@@ -7,7 +7,7 @@ interface AuthScreenProps {
   onBypass?: () => void;
 }
 
-export function AuthScreen({ onAuthSuccess, onBypass }: AuthScreenProps) {
+export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
