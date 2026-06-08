@@ -289,12 +289,12 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100vw',
     height: '100vh',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
     background: 'radial-gradient(ellipse at bottom, #1e293b 0%, #0f172a 100%)',
     fontFamily: "'Inter', sans-serif",
     zIndex: 99999,
-    overflow: 'hidden',
+    overflowY: 'auto',
+    padding: '40px 20px',
+    boxSizing: 'border-box',
   },
   glowBlob1: {
     position: 'absolute',
@@ -317,6 +317,7 @@ const styles: Record<string, React.CSSProperties> = {
     pointerEvents: 'none',
   },
   card: {
+    margin: 'auto',
     position: 'relative',
     width: '100%',
     maxWidth: '440px',
