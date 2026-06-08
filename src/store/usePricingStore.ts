@@ -276,6 +276,10 @@ interface PricingStore {
     simConfidenceScore: number;
     financialHealthScore: number;
     financialHealthLabel: string;
+    revenueTrendPercentage: number;
+    revenueTrendDirection: 'up' | 'down' | 'flat';
+    expenseTrendPercentage: number;
+    expenseTrendDirection: 'up' | 'down' | 'flat';
   };
 
   // Setters & Actions
@@ -1402,7 +1406,11 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
     simBenchmarkScore: 0,
     simConfidenceScore: 0,
     financialHealthScore: 0,
-    financialHealthLabel: 'Critical'
+    financialHealthLabel: 'Critical',
+    revenueTrendPercentage: 0,
+    revenueTrendDirection: 'flat',
+    expenseTrendPercentage: 0,
+    expenseTrendDirection: 'flat'
   },
 
   setBaseCurrency: (currency) => {
@@ -2109,32 +2117,58 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
     const effectiveHourlyBurn =
       totalProductiveHoursMonth > 0 ? monthlyOrganizationalBurn / totalProductiveHoursMonth : 0;
 
-    // 6b. Financial Hub Aggregates calculation
-    let totalRecurringRevenueMonth = 0;
-    recurringRevenues.forEach(rev => {
-      if (rev.status !== 'active') return;
-      const amountInBase = convertCurrency(rev.amount, rev.currency || 'INR', baseCurrency, exchangeRates);
-      let monthlyAmount = amountInBase;
-      if (rev.frequency === 'yearly') {
-        monthlyAmount = amountInBase / 12;
-      } else if (rev.frequency === 'quarterly') {
-        monthlyAmount = amountInBase / 3;
-      }
-      totalRecurringRevenueMonth += monthlyAmount;
-    });
+    // Helper to compute monthly active sums for trend comparisons
+    const getMonthlySumForDate = (
+      items: any[],
+      year: number,
+      monthIndex: number
+    ) => {
+      let sum = 0;
+      const targetMonthStart = new Date(year, monthIndex, 1);
+      const targetMonthEnd = new Date(year, monthIndex + 1, 0);
+      
+      targetMonthStart.setHours(0, 0, 0, 0);
+      targetMonthEnd.setHours(23, 59, 59, 999);
 
-    let totalRecurringExpenseMonth = 0;
-    recurringExpenses.forEach(exp => {
-      if (exp.status !== 'active') return;
-      const amountInBase = convertCurrency(exp.amount, exp.currency || 'INR', baseCurrency, exchangeRates);
-      let monthlyAmount = amountInBase;
-      if (exp.frequency === 'yearly') {
-        monthlyAmount = amountInBase / 12;
-      } else if (exp.frequency === 'quarterly') {
-        monthlyAmount = amountInBase / 3;
-      }
-      totalRecurringExpenseMonth += monthlyAmount;
-    });
+      items.forEach(item => {
+        if (item.status !== 'active') return;
+        
+        const start = new Date(item.startDate);
+        start.setHours(0, 0, 0, 0);
+
+        if (start > targetMonthEnd) return;
+
+        if (item.endDate) {
+          const end = new Date(item.endDate);
+          end.setHours(23, 59, 59, 999);
+          if (end < targetMonthStart) return;
+        }
+
+        const amountInBase = convertCurrency(item.amount, item.currency || 'INR', baseCurrency, exchangeRates);
+        let monthlyAmount = amountInBase;
+        if (item.frequency === 'yearly') {
+          monthlyAmount = amountInBase / 12;
+        } else if (item.frequency === 'quarterly') {
+          monthlyAmount = amountInBase / 3;
+        }
+        sum += monthlyAmount;
+      });
+      return sum;
+    };
+
+    // 6b. Financial Hub Aggregates calculation
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonthIndex = now.getMonth();
+
+    const prevYear = currentMonthIndex === 0 ? currentYear - 1 : currentYear;
+    const prevMonthIndex = currentMonthIndex === 0 ? 11 : currentMonthIndex - 1;
+
+    const totalRecurringRevenueMonth = getMonthlySumForDate(recurringRevenues, currentYear, currentMonthIndex);
+    const previousRecurringRevenueMonth = getMonthlySumForDate(recurringRevenues, prevYear, prevMonthIndex);
+
+    const totalRecurringExpenseMonth = getMonthlySumForDate(recurringExpenses, currentYear, currentMonthIndex);
+    const previousRecurringExpenseMonth = getMonthlySumForDate(recurringExpenses, prevYear, prevMonthIndex);
 
     let totalOutstandingReceivables = 0;
     receivables.forEach(rec => {
@@ -2347,6 +2381,27 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
       financialHealthLabel = 'Critical';
     }
 
+    // Trend computations
+    const calculateTrend = (current: number, previous: number) => {
+      if (previous === 0) {
+        return {
+          percentage: current > 0 ? 100 : 0,
+          direction: current > 0 ? ('up' as const) : ('flat' as const)
+        };
+      }
+      const change = ((current - previous) / previous) * 100;
+      let direction: 'up' | 'down' | 'flat' = 'flat';
+      if (change > 0.001) direction = 'up';
+      else if (change < -0.001) direction = 'down';
+      return {
+        percentage: Number(change.toFixed(2)),
+        direction
+      };
+    };
+
+    const revTrend = calculateTrend(totalRecurringRevenueMonth, previousRecurringRevenueMonth);
+    const expTrend = calculateTrend(totalRecurringExpenseMonth, previousRecurringExpenseMonth);
+
     // Update state metrics
     set({
       metrics: {
@@ -2379,7 +2434,11 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
         simBenchmarkScore,
         simConfidenceScore,
         financialHealthScore,
-        financialHealthLabel
+        financialHealthLabel,
+        revenueTrendPercentage: revTrend.percentage,
+        revenueTrendDirection: revTrend.direction,
+        expenseTrendPercentage: expTrend.percentage,
+        expenseTrendDirection: expTrend.direction
       }
     });
   },

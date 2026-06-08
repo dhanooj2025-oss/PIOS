@@ -3860,8 +3860,17 @@ return (
                   </h3>
                   {/* Row 3: Trend Badge + Label */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 600, backgroundColor: 'rgba(16, 185, 129, 0.08)', color: 'var(--color-success-text)', padding: '2px 8px', borderRadius: '100px', display: 'inline-flex', alignItems: 'center' }}>
-                      ↑ 14%
+                    <span style={{ 
+                      fontSize: '0.72rem', 
+                      fontWeight: 600, 
+                      backgroundColor: metrics.revenueTrendDirection === 'up' ? 'rgba(16, 185, 129, 0.08)' : metrics.revenueTrendDirection === 'down' ? 'rgba(239, 68, 68, 0.08)' : '#F3F4F6', 
+                      color: metrics.revenueTrendDirection === 'up' ? 'var(--color-success-text)' : metrics.revenueTrendDirection === 'down' ? 'var(--color-risk-text)' : '#4B5563', 
+                      padding: '2px 8px', 
+                      borderRadius: '100px', 
+                      display: 'inline-flex', 
+                      alignItems: 'center' 
+                    }}>
+                      {metrics.revenueTrendDirection === 'up' ? '↑' : metrics.revenueTrendDirection === 'down' ? '↓' : '→'} {Math.abs(metrics.revenueTrendPercentage).toFixed(0)}%
                     </span>
                     <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'var(--text-muted)' }}>from last month</span>
                   </div>
@@ -3885,8 +3894,17 @@ return (
                   </h3>
                   {/* Row 3: Trend Badge + Label */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 600, backgroundColor: 'rgba(16, 185, 129, 0.08)', color: 'var(--color-success-text)', padding: '2px 8px', borderRadius: '100px', display: 'inline-flex', alignItems: 'center' }}>
-                      ↓ 2%
+                    <span style={{ 
+                      fontSize: '0.72rem', 
+                      fontWeight: 600, 
+                      backgroundColor: metrics.expenseTrendDirection === 'up' ? 'rgba(239, 68, 68, 0.08)' : metrics.expenseTrendDirection === 'down' ? 'rgba(16, 185, 129, 0.08)' : '#F3F4F6', 
+                      color: metrics.expenseTrendDirection === 'up' ? 'var(--color-risk-text)' : metrics.expenseTrendDirection === 'down' ? 'var(--color-success-text)' : '#4B5563', 
+                      padding: '2px 8px', 
+                      borderRadius: '100px', 
+                      display: 'inline-flex', 
+                      alignItems: 'center' 
+                    }}>
+                      {metrics.expenseTrendDirection === 'up' ? '↑' : metrics.expenseTrendDirection === 'down' ? '↓' : '→'} {Math.abs(metrics.expenseTrendPercentage).toFixed(0)}%
                     </span>
                     <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'var(--text-muted)' }}>from last month</span>
                   </div>
