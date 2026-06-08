@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS recurring_revenues (
     currency VARCHAR(3) DEFAULT 'INR' NOT NULL,
     frequency VARCHAR(20) DEFAULT 'monthly' NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
+    end_date DATE,
     status VARCHAR(20) DEFAULT 'active' NOT NULL,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS recurring_expenses (
     currency VARCHAR(3) DEFAULT 'INR' NOT NULL,
     frequency VARCHAR(20) DEFAULT 'monthly' NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
+    end_date DATE,
     status VARCHAR(20) DEFAULT 'active' NOT NULL,
     forecast_impact VARCHAR(20) DEFAULT 'medium' NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL

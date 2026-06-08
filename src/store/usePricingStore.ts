@@ -1127,8 +1127,8 @@ const mapRecurringRevenueToDB = (rev: Partial<RecurringRevenue>) => {
   if (rev.amount !== undefined) db.amount = rev.amount;
   if (rev.currency !== undefined) db.currency = rev.currency;
   if (rev.frequency !== undefined) db.frequency = rev.frequency;
-  if (rev.startDate !== undefined) db.start_date = rev.startDate;
-  if (rev.endDate !== undefined) db.end_date = rev.endDate;
+  if (rev.startDate !== undefined) db.start_date = rev.startDate || null;
+  if (rev.endDate !== undefined) db.end_date = rev.endDate || null;
   if (rev.status !== undefined) db.status = rev.status;
   if (rev.notes !== undefined) db.notes = rev.notes;
   return db;
@@ -1154,8 +1154,8 @@ const mapRecurringExpenseToDB = (exp: Partial<RecurringExpense>) => {
   if (exp.amount !== undefined) db.amount = exp.amount;
   if (exp.currency !== undefined) db.currency = exp.currency;
   if (exp.frequency !== undefined) db.frequency = exp.frequency;
-  if (exp.startDate !== undefined) db.start_date = exp.startDate;
-  if (exp.endDate !== undefined) db.end_date = exp.endDate;
+  if (exp.startDate !== undefined) db.start_date = exp.startDate || null;
+  if (exp.endDate !== undefined) db.end_date = exp.endDate || null;
   if (exp.status !== undefined) db.status = exp.status;
   if (exp.forecastImpact !== undefined) db.forecast_impact = exp.forecastImpact;
   return db;
