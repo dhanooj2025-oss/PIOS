@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Mail, Lock, ArrowRight, Shield, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Shield, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 interface AuthScreenProps {
   onAuthSuccess: (session: any) => void;
@@ -15,6 +15,8 @@ export function AuthScreen({ onAuthSuccess, onBypass }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isConfigured = isSupabaseConfigured();
 
@@ -196,14 +198,23 @@ export function AuthScreen({ onAuthSuccess, onBypass }: AuthScreenProps) {
             <div style={styles.inputWrapper}>
               <Lock size={16} style={styles.inputIcon} />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={styles.input}
+                style={{ ...styles.input, paddingRight: '42px' }}
                 required
                 disabled={loading}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#cbd5e1')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -213,14 +224,23 @@ export function AuthScreen({ onAuthSuccess, onBypass }: AuthScreenProps) {
               <div style={styles.inputWrapper}>
                 <Lock size={16} style={styles.inputIcon} />
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={styles.input}
+                  style={{ ...styles.input, paddingRight: '42px' }}
                   required
                   disabled={loading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.eyeButton}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#cbd5e1')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
           )}
@@ -263,17 +283,6 @@ export function AuthScreen({ onAuthSuccess, onBypass }: AuthScreenProps) {
           </>
         )}
 
-        {/* Offline Bypass Option if not configured or for ease of use */}
-        {(!isConfigured || onBypass) && (
-          <div style={styles.bypassContainer}>
-            <button
-              onClick={onBypass}
-              style={styles.bypassLink}
-            >
-              {!isConfigured ? 'Launch Local Storage Demo Mode (Offline)' : 'Bypass / Local Storage Demo Mode'}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -510,18 +519,18 @@ const styles: Record<string, React.CSSProperties> = {
   ssoIcon: {
     color: '#ffffff',
   },
-  bypassContainer: {
-    textAlign: 'center',
-    marginTop: '6px',
-  },
-  bypassLink: {
+  eyeButton: {
+    position: 'absolute',
+    right: '14px',
     background: 'none',
     border: 'none',
-    color: '#94a3b8',
-    fontSize: '0.8rem',
-    textDecoration: 'underline',
     cursor: 'pointer',
-    fontWeight: 500,
+    color: '#64748b',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+    outline: 'none',
     transition: 'color 0.2s',
   },
 };
