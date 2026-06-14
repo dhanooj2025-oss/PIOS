@@ -1993,13 +1993,15 @@ function App() {
       const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
       const avatar = session.user.user_metadata?.avatar_url || '';
       
-      updateUserProfile({
-        email,
-        fullName,
-        profilePicture: avatar || userProfile.profilePicture || ''
-      });
+      if (userProfile.email === 'dhanooj@moonhive.com' || userProfile.email !== email) {
+        updateUserProfile({
+          email,
+          fullName,
+          profilePicture: avatar || userProfile.profilePicture || ''
+        });
+      }
     }
-  }, [session, updateUserProfile, userProfile.profilePicture]);
+  }, [session, updateUserProfile, userProfile.email, userProfile.profilePicture]);
 
   // Fetch initial data from Supabase DB on mount / login
   useEffect(() => {

@@ -2470,7 +2470,7 @@ export const usePricingStore = create<PricingStore>((set, get) => ({
   updateUserPreferences: (updates) => {
     set((state) => {
       const nextPrefs = { ...state.userPreferences, ...updates };
-      localStorage.setItem('salezy-preferences', JSON.stringify(nextPrefs));
+      localStorage.setItem('salezy-user-preferences', JSON.stringify(nextPrefs));
       return { userPreferences: nextPrefs };
     });
   }
